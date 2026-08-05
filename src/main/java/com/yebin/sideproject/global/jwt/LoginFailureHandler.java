@@ -1,4 +1,4 @@
-package com.yebin.sideproject.global.security;
+package com.yebin.sideproject.global.jwt;
 
 
 import jakarta.servlet.http.HttpServletRequest;

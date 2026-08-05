@@ -1,13 +1,13 @@
-package com.yebin.sideproject.global.security;
+package com.yebin.sideproject.global.jwt;
 
-import com.yebin.sideproject.domain.auth.dto.LoginResponse;
+import com.yebin.sideproject.domain.auth.dto.LoginResponseDto;
 import com.yebin.sideproject.domain.auth.entity.User;
 import com.yebin.sideproject.domain.auth.repository.RefreshTokenRedisRepository;
-import com.yebin.sideproject.global.jwt.JwtTokenProvider;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NonNull;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
@@ -17,6 +17,7 @@ import tools.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 @Component
 @RequiredArgsConstructor
@@ -28,10 +29,10 @@ public class LoginSuccessHandler implements AuthenticationSuccessHandler {
     private final ObjectMapper objectMapper;
 
     @Override
-    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException {
+    public void onAuthenticationSuccess(@NonNull HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException {
         // 사용자 정보 저장
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-        User user = userDetails.getUser();
+        User user = Objects.requireNonNull(userDetails).getUser();
         log.info( "로그인 성공. JWT 발급. username: {}" ,userDetails.getUsername());
 
         // 토큰 발급
@@ -46,6 +47,6 @@ public class LoginSuccessHandler implements AuthenticationSuccessHandler {
         response.setStatus(HttpServletResponse.SC_OK);
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding("UTF-8");
-        objectMapper.writeValue(response.getWriter(), LoginResponse.of(accessToken, refreshToken, user));
+        objectMapper.writeValue(response.getWriter(), new LoginResponseDto(accessToken, refreshToken, user.getEmail(), user.getNickname(), user.getRole()));
     }
 }

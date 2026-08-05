@@ -1,7 +1,7 @@
 package com.yebin.sideproject.domain.auth.service;
 
-import com.yebin.sideproject.domain.auth.dto.SignupRequest;
-import com.yebin.sideproject.domain.auth.dto.SignupResponse;
+import com.yebin.sideproject.domain.auth.dto.SignupRequestDto;
+import com.yebin.sideproject.domain.auth.dto.SignupResponseDto;
 import com.yebin.sideproject.domain.auth.entity.User;
 import com.yebin.sideproject.domain.auth.exception.DuplicateEmailException;
 import com.yebin.sideproject.domain.auth.repository.UserRepository;
@@ -18,7 +18,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public SignupResponse signup(SignupRequest request) {
+    public SignupResponseDto signup(SignupRequestDto request) {
         // 1. 회원가입 중복 체크: 이미 등록된 이메일이 있는지 확인
         if (userRepository.existsByEmail(request.email())) {
             throw new DuplicateEmailException(request.email());
@@ -32,7 +32,7 @@ public class AuthService {
                 .build();
 
         User saved = userRepository.save(user);
-        return SignupResponse.from(saved);
+        return new SignupResponseDto(saved.getId(), saved.getEmail(), saved.getNickname(), saved.getRole());
     }
 
 }

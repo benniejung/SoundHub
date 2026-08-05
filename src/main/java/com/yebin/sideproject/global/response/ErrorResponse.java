@@ -1,7 +1,7 @@
 package com.yebin.sideproject.global.response;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.deulbull.performance.global.response.code.BaseResponseCode;
+import com.yebin.sideproject.global.response.code.BaseResponseCode;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
