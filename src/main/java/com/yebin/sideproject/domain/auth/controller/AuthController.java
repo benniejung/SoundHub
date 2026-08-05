@@ -42,9 +42,14 @@ public class AuthController {
         throw new IllegalStateException("이 메서드는 실행되지 않습니다. JsonUsernamePasswordAuthenticationFilter가 처리합니다.");
     }
 
+    @Operation(summary = "토큰 재발급", description = "refreshToken으로 accessToken과 refreshToken을 재발급받습니다.")
+    @ApiResponse(responseCode = "200", description = "재발급 성공",
+            content = @Content(schema = @Schema(implementation = LoginResponseDto.class)))
+    @ApiResponse(responseCode = "401", description = "유효하지 않거나 만료된 refreshToken")
     @PostMapping("/refresh")
-    public ResponseEntity<LoginResponseDto> generateRefreshToken(@Valid @RequestBody LoginRequestDto request) {
-        throw new IllegalStateException("이 메서드는 실행되지 않습니다. JsonUsernamePasswordAuthenticationFilter가 처리합니다.");
+    public ResponseEntity<LoginResponseDto> renewAccessToken(@Valid @RequestBody LoginRequestDto request) {
+        LoginResponseDto data = authService.renewAcessToken((request));
+        return ResponseEntity.ok(data);
     }
 
 }

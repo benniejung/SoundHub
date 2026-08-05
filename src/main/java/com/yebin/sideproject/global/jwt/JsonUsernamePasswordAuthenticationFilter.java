@@ -1,9 +1,7 @@
 package com.yebin.sideproject.global.jwt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.yebin.sideproject.domain.auth.dto.LoginRequest;
-import com.yebin.sideproject.global.security.LoginFailureHandler;
-import com.yebin.sideproject.global.security.LoginSuccessHandler;
+import com.yebin.sideproject.domain.auth.dto.LoginRequestDto;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -37,7 +35,7 @@ public class JsonUsernamePasswordAuthenticationFilter extends UsernamePasswordAu
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
         try {
             // 클라이언트에서 전달한 JSON 형태의 이메일과 비밀번호를 Java로 변환
-            LoginRequest loginRequest = objectMapper.readValue(request.getInputStream(), LoginRequest.class);
+            LoginRequestDto loginRequest = objectMapper.readValue(request.getInputStream(), LoginRequestDto.class);
             // 인증 객체 생성
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(loginRequest.email(), loginRequest.password());

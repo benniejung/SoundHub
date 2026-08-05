@@ -1,11 +1,14 @@
 package com.yebin.sideproject.domain.auth.service;
 
-import com.yebin.sideproject.domain.auth.dto.SignupRequestDto;
-import com.yebin.sideproject.domain.auth.dto.SignupResponseDto;
+import com.yebin.sideproject.domain.auth.dto.*;
 import com.yebin.sideproject.domain.auth.entity.User;
 import com.yebin.sideproject.domain.auth.exception.DuplicateEmailException;
 import com.yebin.sideproject.domain.auth.exception.DuplicateNicknameException;
+import com.yebin.sideproject.domain.auth.exception.InvalidRefreshTokenException;
+import com.yebin.sideproject.domain.auth.repository.RefreshTokenRedisRepository;
 import com.yebin.sideproject.domain.auth.repository.UserRepository;
+import com.yebin.sideproject.global.jwt.JwtTokenProvider;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -13,12 +16,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final RefreshTokenRedisRepository refreshTokenRedisRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtTokenProvider jwtTokenProvider;
 
+    @Transactional
     public SignupResponseDto signup(SignupRequestDto request) {
         // 1. 회원가입 중복 체크: 이미 등록된 이메일이 있는지 확인
         if (userRepository.existsByEmail(request.email())) {
@@ -40,5 +45,41 @@ public class AuthService {
         User saved = userRepository.save(user);
         return new SignupResponseDto(saved.getId(), saved.getEmail(), saved.getNickname(), saved.getRole());
     }
+
+    // accessToken이 만료 되어서 refreshToken으로 재발급할 때 요청되는 메서드
+    @Transactional
+    public LoginResponseDto renewAcessToken(@Valid RefreshRequestDto request) {
+        // 1. 클라이언트로부터 refreshToken을 받아온다
+        String refreshToken = request.refreshToken();
+
+        // 2. 리프레시토큰이 만료되었는지 체크
+        if (!jwtTokenProvider.validateToken(refreshToken)) {
+            throw new InvalidRefreshTokenException(); // 만료되면 로그인화면으로 이동(추후 리팩토링)
+        }
+
+        // 3. 리프레시토큰으로 유저 아이디 찾기
+        Long userId;
+        try {
+            userId = jwtTokenProvider.getUserId(refreshToken);
+        } catch (NumberFormatException e) {
+            throw new InvalidRefreshTokenException();
+        }
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(InvalidRefreshTokenException::new);
+
+        // 4. Radis 저장소에 저장되어있던 refreshToken을 가져와서 서로 같은지 확인
+        String storedToken = refreshTokenRedisRepository.findByUserId(userId)
+                .orElseThrow(InvalidRefreshTokenException::new);
+
+        if (!storedToken.equals(refreshToken)) {
+            throw new InvalidRefreshTokenException();
+        }
+
+        String newAccessToken = jwtTokenProvider.generateAccessToken(user);
+
+        return new LoginResponseDto(newAccessToken, refreshToken, user.getEmail(), user.getNickname(), user.getRole());
+    }
+
 
 }

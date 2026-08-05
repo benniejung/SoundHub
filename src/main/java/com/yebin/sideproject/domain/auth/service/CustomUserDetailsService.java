@@ -1,7 +1,7 @@
 package com.yebin.sideproject.domain.auth.service;
 
 import com.yebin.sideproject.domain.auth.repository.UserRepository;
-import com.yebin.sideproject.global.security.CustomUserDetails;
+import com.yebin.sideproject.global.jwt.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -17,6 +17,6 @@ public class CustomUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         return userRepository.findByEmail(email)
                 .map(CustomUserDetails::new)
-                .orElseThrow(() -> new UsernameNotFoundException("존재하지 않는 이메일입니다: " + email));
+                .orElseThrow(() -> new UsernameNotFoundException("존재하지 않는 사용자입니다: " + email));
     }
 }

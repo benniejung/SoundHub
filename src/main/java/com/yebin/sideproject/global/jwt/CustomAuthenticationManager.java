@@ -1,4 +1,4 @@
-package com.yebin.sideproject.global.security;
+package com.yebin.sideproject.global.jwt;
 
 import com.yebin.sideproject.domain.auth.service.CustomUserDetailsService;
 import lombok.RequiredArgsConstructor;

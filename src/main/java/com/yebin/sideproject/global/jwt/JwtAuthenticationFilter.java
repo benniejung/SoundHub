@@ -29,7 +29,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String header = request.getHeader("Authorization");
 
         if (header != null && header.startsWith(BEARER_PREFIX)) {
-            String token = header.substring(BEARER_PREFIX.length()); // Bearer 이후의 토큰값을 가져온다
+            // Bearer 이후의 토큰값을 가져온다
+            String token = header.substring(BEARER_PREFIX.length());
+            // accessToken 검증
             if (jwtTokenProvider.validateToken(token)) {
                 UserDetails userDetails = userDetailsService.loadUserByUsername(jwtTokenProvider.getEmail(token));
                 UsernamePasswordAuthenticationToken authToken =
