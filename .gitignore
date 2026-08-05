@@ -7,6 +7,7 @@ application-secret.properties
 !**/src/main/**/build/
 !**/src/test/**/build/
 CLAUDE.md
+docker-compose.ymls
 
 ### STS ###
 .apt_generated
