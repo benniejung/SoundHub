@@ -1,9 +1,6 @@
 package com.yebin.sideproject.domain.auth.controller;
 
-import com.yebin.sideproject.domain.auth.dto.LoginRequestDto;
-import com.yebin.sideproject.domain.auth.dto.LoginResponseDto;
-import com.yebin.sideproject.domain.auth.dto.SignupRequestDto;
-import com.yebin.sideproject.domain.auth.dto.SignupResponseDto;
+import com.yebin.sideproject.domain.auth.dto.*;
 import com.yebin.sideproject.domain.auth.service.AuthService;
 import com.yebin.sideproject.global.response.SuccessResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -47,7 +44,7 @@ public class AuthController {
             content = @Content(schema = @Schema(implementation = LoginResponseDto.class)))
     @ApiResponse(responseCode = "401", description = "유효하지 않거나 만료된 refreshToken")
     @PostMapping("/refresh")
-    public ResponseEntity<LoginResponseDto> renewAccessToken(@Valid @RequestBody LoginRequestDto request) {
+    public ResponseEntity<LoginResponseDto> renewAccessToken(@Valid @RequestBody RefreshRequestDto request) {
         LoginResponseDto data = authService.renewAcessToken((request));
         return ResponseEntity.ok(data);
     }
