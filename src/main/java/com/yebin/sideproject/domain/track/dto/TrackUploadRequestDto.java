@@ -16,13 +16,13 @@ public record TrackUploadRequestDto(
         String audioFileName,
 
         @NotBlank
-        String audioContentType,
+        String audioContentType, // File.type 으로 자동으로 보내짐
 
         @NotBlank
         String thumbnailFileName,
 
         @NotBlank
-        String thumbnailContentType
+        String thumbnailContentType // File.type 으로 자동으로 보내짐
 ) {
 
 }
