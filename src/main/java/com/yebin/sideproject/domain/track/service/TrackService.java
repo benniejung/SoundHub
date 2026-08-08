@@ -115,11 +115,7 @@ public class TrackService {
         // 2. 해당 트랙의 처리상태(trackProcessStatus)를 업로드 대기 -> 검증중 으로 변경
         trackFileRepository.updateFileProcessStatus(trackFile.getId(), FileProcessStatus.VALIDATING);
 
-        // 3. 파일 용량(s3Object.size()), 포맷(s3Object.contentType()) 저장
-        trackFileRepository.updateFormatAndFileSize(
-                trackFile.getId(),
-                s3Object.contentType(),
-                s3Object.size()
-        );
+        // 3. 포맷(s3Object.contentType()) 저장
+        trackFileRepository.updateFormat(trackFile.getId(), s3Object.contentType());
     }
 }

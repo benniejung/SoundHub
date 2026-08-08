@@ -22,8 +22,8 @@ public interface TrackFileRepository extends JpaRepository<TrackFile, Long> {
     @Query("UPDATE TrackFile tf SET tf.fileProcessStatus = :status, tf.updatedAt = CURRENT_TIMESTAMP WHERE tf.id = :id")
     int updateFileProcessStatus(@Param("id") Long id, @Param("status") FileProcessStatus status);
 
-    // 포맷과 용량을 저장하는 메서드
+    // 포맷을 저장하는 메서드 (용량은 저장하지 않음, bitrate는 추후 트랜스코딩 단계에서 별도로 저장)
     @Modifying
-    @Query("UPDATE TrackFile tf SET tf.format = :format, tf.bitrate = :bitrate, tf.updatedAt = CURRENT_TIMESTAMP WHERE tf.id = :id")
-    int updateFormatAndFileSize(@Param("id") Long id, @Param("format") String format, @Param("bitrate") Long bitrate);
+    @Query("UPDATE TrackFile tf SET tf.format = :format, tf.updatedAt = CURRENT_TIMESTAMP WHERE tf.id = :id")
+    int updateFormat(@Param("id") Long id, @Param("format") String format);
 }
