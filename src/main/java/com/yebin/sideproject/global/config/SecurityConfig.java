@@ -24,6 +24,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**", "/error").permitAll()
                         .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
+                        .requestMatchers("/api/webhooks/s3-events").permitAll()
                         .anyRequest().authenticated()
                 )
                 // jsonFilter가 UsernamePasswordAuthenticationFilter 자리를 대체
