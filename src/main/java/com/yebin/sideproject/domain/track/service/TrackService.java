@@ -2,11 +2,13 @@ package com.yebin.sideproject.domain.track.service;
 
 import com.yebin.sideproject.domain.auth.entity.User;
 import com.yebin.sideproject.domain.auth.entity.enums.Role;
+import com.yebin.sideproject.domain.track.dto.S3EventNotificationDto;
 import com.yebin.sideproject.domain.track.dto.TrackUploadRequestDto;
 import com.yebin.sideproject.domain.track.dto.TrackUploadResponseDto;
 import com.yebin.sideproject.domain.track.entity.Track;
 import com.yebin.sideproject.domain.track.entity.TrackFile;
 import com.yebin.sideproject.domain.track.entity.enums.FileCategory;
+import com.yebin.sideproject.domain.track.entity.enums.FileProcessStatus;
 import com.yebin.sideproject.domain.track.entity.enums.FileType;
 import com.yebin.sideproject.domain.track.entity.enums.TrackStatus;
 import com.yebin.sideproject.domain.track.repository.TrackFileRepository;
@@ -22,12 +24,14 @@ import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
 
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class TrackUploadService {
+public class TrackService {
 
     private static final Duration PRESIGN_EXPIRATION = Duration.ofMinutes(10); // 보통 5분~15분 사이이므로 그 중간값인 10분으로 정함
 
@@ -99,5 +103,23 @@ public class TrackUploadService {
                 .build());
 
         return presigned.url().toString();
+    }
+
+    // S3 파일 등록 후 실행되는 메서드
+    public void handleS3UploadComplete(S3EventNotificationDto.S3Object s3Object) {
+        // 1. key(s3Object.key())로 어떤 트랙의 어떤 파일인지 조회
+        String storagePath = URLDecoder.decode(s3Object.key(), StandardCharsets.UTF_8); // 인코딩된 파일키값을 디코딩해서 원래의 파일 저장소url 찾기
+        TrackFile trackFile = trackFileRepository.findByStoragePath(storagePath)
+                .orElseThrow(() -> new BaseException(GlobalErrorCode.ENDPOINT_NOT_FOUND));
+
+        // 2. 해당 트랙의 처리상태(trackProcessStatus)를 업로드 대기 -> 검증중 으로 변경
+        trackFileRepository.updateFileProcessStatus(trackFile.getId(), FileProcessStatus.VALIDATING);
+
+        // 3. 파일 용량(s3Object.size()), 포맷(s3Object.contentType()) 저장
+        trackFileRepository.updateFormatAndFileSize(
+                trackFile.getId(),
+                s3Object.contentType(),
+                s3Object.size()
+        );
     }
 }
