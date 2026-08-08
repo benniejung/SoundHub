@@ -1,6 +1,7 @@
 package com.yebin.sideproject.domain.track.entity;
 
 import com.yebin.sideproject.domain.track.entity.enums.FileCategory;
+import com.yebin.sideproject.domain.track.entity.enums.FileProcessStatus;
 import com.yebin.sideproject.domain.track.entity.enums.FileType;
 import com.yebin.sideproject.global.entity.BaseEntity;
 import jakarta.persistence.Column;
@@ -43,6 +44,7 @@ public class TrackFile extends BaseEntity {
     @Column(length = 10)
     private String format;
 
+    @Column(name = "bitrate")
     private Integer bitrate;
 
     @Column(name = "duration_sec")
@@ -59,7 +61,7 @@ public class TrackFile extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "file_process_status", nullable = false, length = 20)
-    private String fileProcessStatus;
+    private FileProcessStatus fileProcessStatus;
 
     @Builder
     public TrackFile(Track track, FileCategory fileCategory, FileType fileType, String format, Integer bitrate,
@@ -72,6 +74,7 @@ public class TrackFile extends BaseEntity {
         this.durationSec = durationSec;
         this.imageSize = imageSize;
         this.storagePath = storagePath;
+        this.fileProcessStatus = FileProcessStatus.PENDING;
     }
 
     public void assignFileHash(String fileHash) {
