@@ -57,6 +57,10 @@ public class TrackFile extends BaseEntity {
     @Column(name = "file_hash", unique = true, length = 64)
     private String fileHash;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "file_process_status", nullable = false, length = 20)
+    private String fileProcessStatus;
+
     @Builder
     public TrackFile(Track track, FileCategory fileCategory, FileType fileType, String format, Integer bitrate,
                       Integer durationSec, String imageSize, String storagePath) {
