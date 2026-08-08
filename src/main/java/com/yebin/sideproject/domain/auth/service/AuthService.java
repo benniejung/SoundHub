@@ -31,7 +31,7 @@ public class AuthService {
         }
 
         // 2. 닉네임 중복 체크; 이미 등록된 닉네임이 있는지 확인
-        if(userRepository.existByNickname(request.nickname())) {
+        if(userRepository.existsByNickname(request.nickname())) {
             throw new DuplicateNicknameException(request.nickname());
         }
 

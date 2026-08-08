@@ -48,5 +48,4 @@ public class AuthController {
         LoginResponseDto data = authService.renewAcessToken((request));
         return ResponseEntity.ok(data);
     }
-
 }
