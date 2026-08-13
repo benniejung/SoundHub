@@ -8,7 +8,10 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
@@ -28,6 +31,9 @@ public class LoginSuccessHandler implements AuthenticationSuccessHandler {
     private final RefreshTokenRedisRepository refreshTokenRedisRepository;
     private final ObjectMapper objectMapper;
 
+    @Value("${cookie.secure:true}")
+    private boolean cookieSecure;
+
     @Override
     public void onAuthenticationSuccess(@NonNull HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException {
         // 사용자 정보 저장
@@ -44,9 +50,20 @@ public class LoginSuccessHandler implements AuthenticationSuccessHandler {
         Duration ttl = Duration.between(LocalDateTime.now(), refreshExpiresAt);
         refreshTokenRedisRepository.save(user.getId(), refreshToken, ttl);
 
+        // 리프레시 토큰은 JS에서 접근 불가능한 HttpOnly 쿠키로 전달
+        // SameSite=None은 Secure 쿠키에서만 허용되므로, HTTP로 띄우는 로컬 환경(cookie.secure=false)에서는 Lax로 낮춘다
+        ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", refreshToken)
+                .httpOnly(true)
+                .secure(cookieSecure)
+                .sameSite(cookieSecure ? "None" : "Lax")
+                .path("/")
+                .maxAge(ttl)
+                .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
+
         response.setStatus(HttpServletResponse.SC_OK);
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding("UTF-8");
-        objectMapper.writeValue(response.getWriter(), new LoginResponseDto(accessToken, refreshToken, user.getEmail(), user.getNickname(), user.getRole()));
+        objectMapper.writeValue(response.getWriter(), new LoginResponseDto(accessToken, null, user.getEmail(), user.getNickname(), user.getRole()));
     }
 }
