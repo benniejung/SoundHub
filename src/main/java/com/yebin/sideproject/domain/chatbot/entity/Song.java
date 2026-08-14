@@ -1,4 +1,4 @@
-package com.yebin.sideproject.domain.entity;
+package com.yebin.sideproject.domain.chatbot.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
