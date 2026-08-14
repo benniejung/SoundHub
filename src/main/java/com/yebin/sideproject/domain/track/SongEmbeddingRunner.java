@@ -1,6 +1,6 @@
-package com.yebin.sideproject.domain.song;
+package com.yebin.sideproject.domain.track;
 
-import com.yebin.sideproject.domain.song.repository.SongRepository;
+import com.yebin.sideproject.domain.track.repository.SongRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.VectorStore;
