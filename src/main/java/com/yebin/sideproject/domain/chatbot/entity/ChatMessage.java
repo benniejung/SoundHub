@@ -1,4 +1,4 @@
-package com.yebin.sideproject.domain.entity;
+package com.yebin.sideproject.domain.chatbot.entity;
 
 import java.time.LocalDateTime;
 import java.util.UUID;

@@ -1,7 +1,7 @@
 package com.yebin.sideproject.domain.chatbot.service;
 
-import com.yebin.sideproject.domain.entity.ChatMessage;
-import com.yebin.sideproject.domain.entity.MessageRole;
+import com.yebin.sideproject.domain.chatbot.entity.ChatMessage;
+import com.yebin.sideproject.domain.chatbot.entity.MessageRole;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
