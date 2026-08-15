@@ -2,7 +2,8 @@ package com.yebin.sideproject.domain.auth.controller;
 
 import com.yebin.sideproject.domain.auth.dto.*;
 import com.yebin.sideproject.domain.auth.service.AuthService;
-import com.yebin.sideproject.global.response.SuccessResponse;
+import com.yebin.sideproject.global.response.BaseResponse;
+import com.yebin.sideproject.global.response.code.GlobalSuccessCode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -25,9 +26,9 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/signup")
-    public SuccessResponse<SignupResponseDto> signup(@Valid @RequestBody SignupRequestDto request) {
+    public BaseResponse<SignupResponseDto> signup(@Valid @RequestBody SignupRequestDto request) {
         SignupResponseDto data = authService.signup(request);
-        return SuccessResponse.created(data);
+        return BaseResponse.onSuccess(GlobalSuccessCode.SUCCESS_OK, data);
     }
 
     @Operation(summary = "로그인", description = "이메일/비밀번호로 로그인하여 JWT토큰을 발급받습니다.")

@@ -37,7 +37,7 @@ public class TrackController {
         return ResponseEntity.ok(data);
     }
 
-    @GetMapping
+    @GetMapping()
     @Operation(summary = "내 음원 목록 조회", description = "로그인한 크리에이터 본인이 업로드한 음원 목록을 최신순으로 조회합니다.")
     public ResponseEntity<List<TrackSummaryResponseDto>> getMyTracks(
             @AuthenticationPrincipal CustomUserDetails userDetails

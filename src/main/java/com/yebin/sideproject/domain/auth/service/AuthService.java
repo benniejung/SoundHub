@@ -2,6 +2,7 @@ package com.yebin.sideproject.domain.auth.service;
 
 import com.yebin.sideproject.domain.auth.dto.*;
 import com.yebin.sideproject.domain.auth.entity.User;
+import com.yebin.sideproject.domain.auth.exception.AuthErrorCode;
 import com.yebin.sideproject.domain.auth.exception.DuplicateEmailException;
 import com.yebin.sideproject.domain.auth.exception.DuplicateNicknameException;
 import com.yebin.sideproject.domain.auth.exception.InvalidRefreshTokenException;
@@ -27,7 +28,7 @@ public class AuthService {
     public SignupResponseDto signup(SignupRequestDto request) {
         // 1. 회원가입 중복 체크: 이미 등록된 이메일이 있는지 확인
         if (userRepository.existsByEmail(request.email())) {
-            throw new DuplicateEmailException(request.email());
+            throw new DuplicateEmailException(AuthErrorCode.DUPLICATE_EMAIL_ERROR);
         }
 
         // 2. 닉네임 중복 체크; 이미 등록된 닉네임이 있는지 확인

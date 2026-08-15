@@ -1,8 +1,11 @@
 package com.yebin.sideproject.domain.auth.exception;
 
-public class DuplicateEmailException extends RuntimeException {
+import com.yebin.sideproject.global.exception.BaseException;
+import com.yebin.sideproject.global.response.code.BaseResponseCode;
+import com.yebin.sideproject.global.response.code.GlobalErrorCode;
 
-    public DuplicateEmailException(String email) {
-        super("이미 가입된 이메일입니다: " + email);
+public class DuplicateEmailException extends BaseException {
+    public DuplicateEmailException(BaseResponseCode errorCode) {
+        super(errorCode);
     }
 }
