@@ -1,5 +1,6 @@
 package com.yebin.sideproject.global.config;
 
+import com.yebin.sideproject.global.jwt.CustomAuthenticationEntryPoint;
 import com.yebin.sideproject.global.jwt.JsonUsernamePasswordAuthenticationFilter;
 import com.yebin.sideproject.global.jwt.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,7 @@ public class SecurityConfig {
 
     private final JsonUsernamePasswordAuthenticationFilter jsonFilter;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
     @Value("${cors.allowed-origins:http://localhost:3000}")
     private List<String> allowedOrigins;
@@ -40,7 +42,12 @@ public class SecurityConfig {
                 // jsonFilter가 UsernamePasswordAuthenticationFilter 자리를 대체
                 .addFilterAt(jsonFilter, UsernamePasswordAuthenticationFilter.class)
                 // UsernamePasswordAuthenticationFilter가 실행되기 전에 jwtAuthenticationFilter 실행
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint(customAuthenticationEntryPoint)   // 401
+//                        .accessDeniedHandler(jwtAccessDeniedHandler)          // 403
+                );
+
         return http.build();
     }
 
