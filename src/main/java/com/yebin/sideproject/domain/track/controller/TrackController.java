@@ -1,5 +1,6 @@
 package com.yebin.sideproject.domain.track.controller;
 
+import com.yebin.sideproject.domain.track.dto.TrackSummaryResponseDto;
 import com.yebin.sideproject.domain.track.dto.TrackUploadRequestDto;
 import com.yebin.sideproject.domain.track.dto.TrackUploadResponseDto;
 import com.yebin.sideproject.domain.track.service.TrackService;
@@ -11,9 +12,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+
+import java.util.List;
 
 @Controller
 @RequiredArgsConstructor
@@ -32,4 +36,14 @@ public class TrackController {
         TrackUploadResponseDto data = trackService.requestUpload(userDetails.getUser(), request);
         return ResponseEntity.ok(data);
     }
+
+    @GetMapping
+    @Operation(summary = "내 음원 목록 조회", description = "로그인한 크리에이터 본인이 업로드한 음원 목록을 최신순으로 조회합니다.")
+    public ResponseEntity<List<TrackSummaryResponseDto>> getMyTracks(
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        List<TrackSummaryResponseDto> data = trackService.getMyTracks(userDetails.getUser());
+        return ResponseEntity.ok(data);
+    }
+
 }

@@ -1,12 +1,15 @@
 package com.yebin.sideproject.domain.track.repository;
 
 import com.yebin.sideproject.domain.track.entity.TrackFile;
+import com.yebin.sideproject.domain.track.entity.enums.FileCategory;
 import com.yebin.sideproject.domain.track.entity.enums.FileProcessStatus;
+import com.yebin.sideproject.domain.track.entity.enums.FileType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface TrackFileRepository extends JpaRepository<TrackFile, Long> {
@@ -16,6 +19,10 @@ public interface TrackFileRepository extends JpaRepository<TrackFile, Long> {
 
     // S3에 등록된 파일을 찾기 위한 메서드
     Optional<TrackFile> findByStoragePath(String storagePath);
+
+    // 여러 트랙의 썸네일 파일을 한 번에 조회하기 위한 메서드 (목록 조회 시 N+1 방지)
+    List<TrackFile> findByTrackIdInAndFileCategoryAndFileType(
+            List<Long> trackIds, FileCategory fileCategory, FileType fileType);
 
     // 처리 상태 변경 메서드
     @Modifying

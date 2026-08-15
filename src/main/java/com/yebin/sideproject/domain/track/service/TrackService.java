@@ -3,6 +3,7 @@ package com.yebin.sideproject.domain.track.service;
 import com.yebin.sideproject.domain.auth.entity.User;
 import com.yebin.sideproject.domain.auth.entity.enums.Role;
 import com.yebin.sideproject.domain.track.dto.S3EventNotificationDto;
+import com.yebin.sideproject.domain.track.dto.TrackSummaryResponseDto;
 import com.yebin.sideproject.domain.track.dto.TrackUploadRequestDto;
 import com.yebin.sideproject.domain.track.dto.TrackUploadResponseDto;
 import com.yebin.sideproject.domain.track.entity.Track;
@@ -19,14 +20,20 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
+import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
 
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -90,6 +97,26 @@ public class TrackService {
         );
     }
 
+    // 로그인한 크리에이터 본인이 업로드한 음원 목록 조회
+    public List<TrackSummaryResponseDto> getMyTracks(User user) {
+        List<Track> tracks = trackRepository.findByUserIdOrderByCreatedAtDesc(user.getId());
+
+        List<Long> trackIds = tracks.stream().map(Track::getId).toList();
+        Map<Long, String> thumbnailPathByTrackId = trackFileRepository
+                .findByTrackIdInAndFileCategoryAndFileType(trackIds, FileCategory.IMAGE, FileType.THUMBNAIL_ORIGINAL)
+                .stream()
+                .collect(Collectors.toMap(tf -> tf.getTrack().getId(), TrackFile::getStoragePath));
+
+        return tracks.stream()
+                .map(track -> {
+                    String storagePath = thumbnailPathByTrackId.get(track.getId());
+                    String thumbnailUrl = storagePath != null ? presignGetUrl(thumbnailBucket, storagePath) : null;
+                    return new TrackSummaryResponseDto(
+                            track.getId(), thumbnailUrl, track.getTitle(), track.getStatus(), track.getCreatedAt());
+                })
+                .toList();
+    }
+
     private String presignPutUrl(String bucket, String key, String contentType) {
         PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                 .bucket(bucket)
@@ -100,6 +127,20 @@ public class TrackService {
         PresignedPutObjectRequest presigned = s3Presigner.presignPutObject(PutObjectPresignRequest.builder()
                 .signatureDuration(PRESIGN_EXPIRATION)
                 .putObjectRequest(putObjectRequest)
+                .build());
+
+        return presigned.url().toString();
+    }
+
+    private String presignGetUrl(String bucket, String key) {
+        GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                .bucket(bucket)
+                .key(key)
+                .build();
+
+        PresignedGetObjectRequest presigned = s3Presigner.presignGetObject(GetObjectPresignRequest.builder()
+                .signatureDuration(PRESIGN_EXPIRATION)
+                .getObjectRequest(getObjectRequest)
                 .build());
 
         return presigned.url().toString();
@@ -118,4 +159,6 @@ public class TrackService {
         // 3. 포맷(s3Object.contentType()) 저장
         trackFileRepository.updateFormat(trackFile.getId(), s3Object.contentType());
     }
+
+
 }
