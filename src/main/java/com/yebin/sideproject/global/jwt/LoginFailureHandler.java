@@ -1,23 +1,31 @@
 package com.yebin.sideproject.global.jwt;
 
-
+import com.yebin.sideproject.domain.auth.exception.AuthErrorCode;
+import com.yebin.sideproject.global.response.BaseResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.extern.slf4j.Slf4j;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 
 @Component
-@Slf4j
+@RequiredArgsConstructor
 public class LoginFailureHandler implements AuthenticationFailureHandler {
+
+    private final ObjectMapper objectMapper;
 
     @Override
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception) throws IOException {
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); //401 인증 실패
-        response.getWriter().write("fail");
-        log.info("로그인 실패");
+        AuthErrorCode errorCode = AuthErrorCode.LOGIN_FAILED;
+
+        response.setStatus(errorCode.getStatus().value());
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write(objectMapper.writeValueAsString(BaseResponse.onFailure(errorCode, null)));
     }
 }

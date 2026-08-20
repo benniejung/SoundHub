@@ -14,6 +14,7 @@ import static org.springframework.http.HttpStatus.*;
 public enum AuthErrorCode implements BaseResponseCode {
 
     REFRESH_TOKEN_INVALID(UNAUTHORIZED, "AUTH_401_1", "리프레시 토큰이 유효하지 않습니다. 다시 로그인해주세요."),
+    LOGIN_FAILED(UNAUTHORIZED, "AUTH_401_2", "이메일 또는 비밀번호가 올바르지 않습니다."),
     DUPLICATE_EMAIL_ERROR(CONFLICT, "AUTH_409_1", "이미 가입된 이메일입니다.");
 
     private final HttpStatus status;
