@@ -2,6 +2,7 @@ package com.yebin.sideproject.domain.auth.controller;
 
 import com.yebin.sideproject.domain.auth.dto.*;
 import com.yebin.sideproject.domain.auth.service.AuthService;
+import com.yebin.sideproject.global.jwt.RefreshTokenCookieFactory;
 import com.yebin.sideproject.global.response.BaseResponse;
 import com.yebin.sideproject.global.response.code.GlobalSuccessCode;
 import io.swagger.v3.oas.annotations.Operation;
@@ -9,13 +10,13 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final AuthService authService;
+    private final RefreshTokenCookieFactory refreshTokenCookieFactory;
 
     @PostMapping("/signup")
     public BaseResponse<SignupResponseDto> signup(@Valid @RequestBody SignupRequestDto request) {
@@ -48,5 +50,17 @@ public class AuthController {
     public ResponseEntity<LoginResponseDto> renewAccessToken(@Valid @RequestBody RefreshRequestDto request) {
         LoginResponseDto data = authService.renewAcessToken((request));
         return ResponseEntity.ok(data);
+    }
+
+    @Operation(summary = "로그아웃", description = "Redis의 refreshToken을 제거하고 refreshToken 쿠키를 만료시킵니다.")
+    @PostMapping("/logout")
+    public BaseResponse<Void> logout(@CookieValue(value = "refreshToken", required = false) String refreshToken,
+                                      HttpServletResponse response) {
+        authService.logout(refreshToken);
+
+        ResponseCookie expiredCookie = refreshTokenCookieFactory.expire();
+        response.addHeader(HttpHeaders.SET_COOKIE, expiredCookie.toString());
+
+        return BaseResponse.onSuccess(GlobalSuccessCode.SUCCESS_OK, null);
     }
 }

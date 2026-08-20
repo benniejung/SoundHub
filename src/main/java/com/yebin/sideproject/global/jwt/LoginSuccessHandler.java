@@ -8,7 +8,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseCookie;
@@ -29,10 +28,8 @@ public class LoginSuccessHandler implements AuthenticationSuccessHandler {
 
     private final JwtTokenProvider jwtTokenProvider;
     private final RefreshTokenRedisRepository refreshTokenRedisRepository;
+    private final RefreshTokenCookieFactory refreshTokenCookieFactory;
     private final ObjectMapper objectMapper;
-
-    @Value("${cookie.secure:true}")
-    private boolean cookieSecure;
 
     @Override
     public void onAuthenticationSuccess(@NonNull HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException {
@@ -51,14 +48,7 @@ public class LoginSuccessHandler implements AuthenticationSuccessHandler {
         refreshTokenRedisRepository.save(user.getId(), refreshToken, ttl);
 
         // 리프레시 토큰은 JS에서 접근 불가능한 HttpOnly 쿠키로 전달
-        // SameSite=None은 Secure 쿠키에서만 허용되므로, HTTP로 띄우는 로컬 환경(cookie.secure=false)에서는 Lax로 낮춘다
-        ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", refreshToken)
-                .httpOnly(true)
-                .secure(cookieSecure)
-                .sameSite(cookieSecure ? "None" : "Lax")
-                .path("/")
-                .maxAge(ttl)
-                .build();
+        ResponseCookie refreshTokenCookie = refreshTokenCookieFactory.issue(refreshToken, ttl);
         response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
 
         response.setStatus(HttpServletResponse.SC_OK);

@@ -1,8 +1,11 @@
 package com.yebin.sideproject.domain.auth.exception;
 
-public class InvalidRefreshTokenException extends RuntimeException {
+import com.yebin.sideproject.global.exception.BaseException;
+import com.yebin.sideproject.global.response.code.BaseResponseCode;
 
-    public InvalidRefreshTokenException() {
-        super("유효하지 않거나 만료된 refresh token입니다.");
+public class InvalidRefreshTokenException extends BaseException {
+
+    public InvalidRefreshTokenException(BaseResponseCode errorCode) {
+        super(errorCode);
     }
 }

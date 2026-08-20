@@ -9,14 +9,17 @@ import com.yebin.sideproject.domain.auth.exception.InvalidRefreshTokenException;
 import com.yebin.sideproject.domain.auth.repository.RefreshTokenRedisRepository;
 import com.yebin.sideproject.domain.auth.repository.UserRepository;
 import com.yebin.sideproject.global.jwt.JwtTokenProvider;
+import io.jsonwebtoken.JwtException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthService {
 
     private final UserRepository userRepository;
@@ -55,7 +58,7 @@ public class AuthService {
 
         // 2. 리프레시토큰이 만료되었는지 체크
         if (!jwtTokenProvider.validateToken(refreshToken)) {
-            throw new InvalidRefreshTokenException(); // 만료되면 로그인화면으로 이동(추후 리팩토링)
+            throw new InvalidRefreshTokenException(AuthErrorCode.REFRESH_TOKEN_INVALID); // 만료되면 로그인화면으로 이동(추후 리팩토링)
         }
 
         // 3. 리프레시토큰으로 유저 아이디 찾기
@@ -63,18 +66,18 @@ public class AuthService {
         try {
             userId = jwtTokenProvider.getUserId(refreshToken);
         } catch (NumberFormatException e) {
-            throw new InvalidRefreshTokenException();
+            throw new InvalidRefreshTokenException(AuthErrorCode.REFRESH_TOKEN_INVALID); // 추후 수정
         }
 
         User user = userRepository.findById(userId)
-                .orElseThrow(InvalidRefreshTokenException::new);
+                .orElseThrow(() -> new InvalidRefreshTokenException(AuthErrorCode.REFRESH_TOKEN_INVALID)); // 추후 수정
 
         // 4. Radis 저장소에 저장되어있던 refreshToken을 가져와서 서로 같은지 확인
         String storedToken = refreshTokenRedisRepository.findByUserId(userId)
-                .orElseThrow(InvalidRefreshTokenException::new);
+                .orElseThrow(() -> new InvalidRefreshTokenException(AuthErrorCode.REFRESH_TOKEN_INVALID)); // 추후 수정
 
         if (!storedToken.equals(refreshToken)) {
-            throw new InvalidRefreshTokenException();
+            throw new InvalidRefreshTokenException(AuthErrorCode.REFRESH_TOKEN_INVALID);  // 추후 수정
         }
 
         String newAccessToken = jwtTokenProvider.generateAccessToken(user);
@@ -82,5 +85,18 @@ public class AuthService {
         return new LoginResponseDto(newAccessToken, refreshToken, user.getEmail(), user.getNickname(), user.getRole());
     }
 
+    // 로그아웃: Redis에 저장된 refreshToken을 제거한다
+    public void logout(String refreshToken) {
+        if (refreshToken == null || refreshToken.isBlank()) {
+            return;
+        }
 
+        try {
+            Long userId = jwtTokenProvider.getUserId(refreshToken);
+            refreshTokenRedisRepository.deleteByUserId(userId);
+        } catch (JwtException | NumberFormatException e) {
+            // 이미 만료되었거나 위조된 토큰이면 Redis에 삭제할 대상이 없으므로 무시
+            log.info("로그아웃 요청에 유효하지 않은 refreshToken이 포함되어 있어 Redis 삭제를 건너뜁니다.");
+        }
+    }
 }
