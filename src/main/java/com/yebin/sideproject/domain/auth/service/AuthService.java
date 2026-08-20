@@ -82,7 +82,7 @@ public class AuthService {
 
         String newAccessToken = jwtTokenProvider.generateAccessToken(user);
 
-        return new LoginResponseDto(newAccessToken, refreshToken, user.getEmail(), user.getNickname(), user.getRole());
+        return new LoginResponseDto(newAccessToken, user.getEmail(), user.getNickname(), user.getRole());
     }
 
     // 로그아웃: Redis에 저장된 refreshToken을 제거한다

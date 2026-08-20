@@ -42,6 +42,6 @@ public class User extends BaseEntity {
         this.email = email;
         this.password = password;
         this.nickname = nickname;
-        this.role = role != null ? role : Role.USER; // role은 사용자가 설정할 수 없기 때문에 null로 들어옴. 그래서 서버가 설정해 줘야함
+        this.role = role != null ? role : Role.CREATOR; // role은 사용자가 설정할 수 없기 때문에 null로 들어옴. 그래서 서버가 설정해 줘야함
     }
 }
