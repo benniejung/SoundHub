@@ -1,8 +1,11 @@
 package com.yebin.sideproject.domain.auth.exception;
 
-public class DuplicateNicknameException extends RuntimeException{
+import com.yebin.sideproject.global.exception.BaseException;
+import com.yebin.sideproject.global.response.code.BaseResponseCode;
 
-    public DuplicateNicknameException(String nickname) {
-        super("등록된 닉네임입니다. 다른 닉네임을 설정해주세요");
+public class DuplicateNicknameException extends BaseException {
+
+    public DuplicateNicknameException(BaseResponseCode errorCode) {
+        super(errorCode);
     }
 }

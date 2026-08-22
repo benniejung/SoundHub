@@ -36,7 +36,7 @@ public class AuthService {
 
         // 2. 닉네임 중복 체크; 이미 등록된 닉네임이 있는지 확인
         if(userRepository.existsByNickname(request.nickname())) {
-            throw new DuplicateNicknameException(request.nickname());
+            throw new DuplicateNicknameException(AuthErrorCode.DUPLICATE_NICKNAME_ERROR);
         }
 
         // 3. 유저 객체 생성 후 DB에 저장 (비밀번호는 해시로 변환해 저장)
@@ -52,7 +52,7 @@ public class AuthService {
 
     public void confirmDuplicateNickname(ConfirmDuplicateNicknameRequestDto request) {
         if(userRepository.existsByNickname(request.nickname())) {
-            throw new DuplicateNicknameException(request.nickname());
+            throw new DuplicateNicknameException(AuthErrorCode.DUPLICATE_NICKNAME_ERROR);
         }
     }
 
