@@ -1,11 +1,12 @@
 package com.yebin.sideproject.global.jwt;
 
-import com.yebin.sideproject.domain.auth.service.CustomUserDetailsService;
+import com.yebin.sideproject.domain.auth.service.UserDetailsServiceImpl;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -21,16 +22,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final String BEARER_PREFIX = "Bearer ";
 
     private final JwtTokenProvider jwtTokenProvider;
-    private final CustomUserDetailsService userDetailsService;
+    private final UserDetailsServiceImpl userDetailsService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
-        String header = request.getHeader("Authorization");
+        String tokens = request.getHeader(HttpHeaders.AUTHORIZATION);
 
-        if (header != null && header.startsWith(BEARER_PREFIX)) {
+        if (tokens != null && tokens.startsWith(BEARER_PREFIX)) {
             // Bearer 이후의 토큰값을 가져온다
-            String token = header.substring(BEARER_PREFIX.length());
+            String token = tokens.substring(BEARER_PREFIX.length());
             // accessToken 검증
             if (jwtTokenProvider.validateToken(token)) {
                 UserDetails userDetails = userDetailsService.loadUserByUsername(jwtTokenProvider.getEmail(token));

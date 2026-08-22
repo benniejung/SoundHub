@@ -36,7 +36,6 @@ public class LoginSuccessHandler implements AuthenticationSuccessHandler {
         // 사용자 정보 저장
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
         User user = Objects.requireNonNull(userDetails).getUser();
-        log.info( "로그인 성공. JWT 발급. username: {}" ,userDetails.getUsername());
 
         // 토큰 발급
         String accessToken = jwtTokenProvider.generateAccessToken(user);

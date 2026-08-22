@@ -17,7 +17,7 @@ import java.io.IOException;
 // 401 에러를 처리하는 핸드러
 @Component
 @RequiredArgsConstructor
-public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint {
+public class AuthEntryPoint implements AuthenticationEntryPoint {
     private final ObjectMapper objectMapper;
 
     @Override

@@ -56,7 +56,6 @@ public class JwtTokenProvider {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
             return true;
         } catch (JwtException | IllegalArgumentException e) {
-            // 토큰 만료되었다는 에러 핸들러
             return false;
         }
     }
