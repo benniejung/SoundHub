@@ -27,10 +27,18 @@ public class AuthController {
     private final AuthService authService;
     private final RefreshTokenCookieFactory refreshTokenCookieFactory;
 
+    @GetMapping("/confirm-nickname")
+    public BaseResponse<Void> confirmDuplicateNickname(@Valid @RequestBody ConfirmDuplicateNicknameRequestDto request) {
+        authService.confirmDuplicateNickname(request);
+        return BaseResponse.onSuccess(GlobalSuccessCode.SUCCESS_OK, null);
+    }
+
     @PostMapping("/signup")
-    public BaseResponse<SignupResponseDto> signup(@Valid @RequestBody SignupRequestDto request) {
+    public ResponseEntity<BaseResponse<SignupResponseDto>> signup(@Valid @RequestBody SignupRequestDto request) {
         SignupResponseDto data = authService.signup(request);
-        return BaseResponse.onSuccess(GlobalSuccessCode.SUCCESS_OK, data);
+        return ResponseEntity
+                .status(GlobalSuccessCode.SUCCESS_CREATED.getStatus())
+                .body(BaseResponse.onSuccess(GlobalSuccessCode.SUCCESS_CREATED, data));
     }
 
     @Operation(summary = "로그인", description = "이메일/비밀번호로 로그인하여 JWT토큰을 발급받습니다.")

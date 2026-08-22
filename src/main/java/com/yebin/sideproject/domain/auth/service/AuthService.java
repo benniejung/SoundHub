@@ -50,6 +50,12 @@ public class AuthService {
         return new SignupResponseDto(saved.getId(), saved.getEmail(), saved.getNickname(), saved.getRole());
     }
 
+    public void confirmDuplicateNickname(ConfirmDuplicateNicknameRequestDto request) {
+        if(userRepository.existsByNickname(request.nickname())) {
+            throw new DuplicateNicknameException(request.nickname());
+        }
+    }
+
     // accessToken이 만료 되어서 refreshToken으로 재발급할 때 요청되는 메서드
     @Transactional
     public LoginResponseDto renewAcessToken(@Valid RefreshRequestDto request) {
