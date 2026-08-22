@@ -8,6 +8,7 @@ import com.yebin.sideproject.domain.auth.exception.DuplicateNicknameException;
 import com.yebin.sideproject.domain.auth.exception.InvalidRefreshTokenException;
 import com.yebin.sideproject.domain.auth.repository.RefreshTokenRedisRepository;
 import com.yebin.sideproject.domain.auth.repository.UserRepository;
+import com.yebin.sideproject.global.entity.Password;
 import com.yebin.sideproject.global.jwt.JwtTokenProvider;
 import io.jsonwebtoken.JwtException;
 import jakarta.validation.Valid;
@@ -42,7 +43,7 @@ public class AuthService {
         // 3. 유저 객체 생성 후 DB에 저장 (비밀번호는 해시로 변환해 저장)
         User user = User.builder()
                 .email(request.email())
-                .password(passwordEncoder.encode(request.password()))
+                .password(Password.savePassword(request.password(), passwordEncoder))
                 .nickname(request.nickname())
                 .build();
 

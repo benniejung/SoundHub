@@ -2,14 +2,8 @@ package com.yebin.sideproject.domain.auth.entity;
 
 import com.yebin.sideproject.domain.auth.entity.enums.Role;
 import com.yebin.sideproject.global.entity.BaseEntity;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import com.yebin.sideproject.global.entity.Password;
+import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -28,7 +22,8 @@ public class User extends BaseEntity {
     private String email;
 
     @Column(nullable = false)
-    private String password;
+    @Embedded
+    private Password password;
 
     @Column(nullable = false)
     private String nickname;
@@ -38,7 +33,7 @@ public class User extends BaseEntity {
     private Role role;
 
     @Builder
-    public User(String email, String password, String nickname, Role role) {
+    public User(String email, Password password, String nickname, Role role) {
         this.email = email;
         this.password = password;
         this.nickname = nickname;
