@@ -28,11 +28,20 @@ public class AuthController {
     private final RefreshTokenCookieFactory refreshTokenCookieFactory;
 
     @GetMapping("/confirm-nickname")
-    public BaseResponse<Void> confirmDuplicateNickname(@Valid @RequestBody ConfirmDuplicateNicknameRequestDto request) {
+    @Operation(summary = "닉네임 중복 확인")
+    @ApiResponse(responseCode = "409", description = "해당 닉네임을 사용할 수 없습니다.")
+    public ResponseEntity<BaseResponse<Void>> confirmDuplicateNickname(@Valid @RequestBody ConfirmDuplicateNicknameRequestDto request) {
         authService.confirmDuplicateNickname(request);
-        return BaseResponse.onSuccess(GlobalSuccessCode.SUCCESS_OK, null);
+        return ResponseEntity
+                .status(GlobalSuccessCode.SUCCESS_OK.getStatus())
+                .body(BaseResponse.onSuccess(GlobalSuccessCode.SUCCESS_OK, null));
     }
 
+    @Operation(summary = "회원가입", description = "이메일, 비밀번호, 닉네임을 입력받아 회원가입합니다.")
+    @ApiResponse(responseCode = "201", description = "회원가입 성공",
+            content = @Content(schema = @Schema(implementation = LoginResponseDto.class)))
+    @ApiResponse(responseCode = "409", description = "이미 가입한 이메일입니다.")
+    @ApiResponse(responseCode = "409", description = "해당 닉네임을 사용할 수 없습니다.")
     @PostMapping("/signup")
     public ResponseEntity<BaseResponse<SignupResponseDto>> signup(@Valid @RequestBody SignupRequestDto request) {
         SignupResponseDto data = authService.signup(request);
