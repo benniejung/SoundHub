@@ -2,10 +2,8 @@ package com.yebin.sideproject.domain.auth.service;
 
 import com.yebin.sideproject.domain.auth.dto.ConfirmDuplicateNicknameRequestDto;
 import com.yebin.sideproject.domain.auth.dto.LoginResponseDto;
-import com.yebin.sideproject.domain.auth.dto.RefreshRequestDto;
 import com.yebin.sideproject.domain.auth.dto.SignupRequestDto;
 import com.yebin.sideproject.domain.auth.dto.SignupResponseDto;
-import jakarta.validation.Valid;
 
 public interface AuthService {
 
@@ -13,7 +11,8 @@ public interface AuthService {
 
     void confirmDuplicateNickname(ConfirmDuplicateNicknameRequestDto request);
 
-    LoginResponseDto renewAcessToken(@Valid RefreshRequestDto request);
+    // accessToken이 만료 되어서 refreshToken으로 재발급할 때 요청되는 메서드
+    LoginResponseDto renewAcessToken(String refreshToken);
 
     void logout(String refreshToken);
 }

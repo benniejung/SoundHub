@@ -64,8 +64,9 @@ public class AuthController {
             content = @Content(schema = @Schema(implementation = LoginResponseDto.class)))
     @ApiResponse(responseCode = "401", description = "유효하지 않거나 만료된 refreshToken")
     @PostMapping("/refresh")
-    public ResponseEntity<LoginResponseDto> renewAccessToken(@Valid @RequestBody RefreshRequestDto request) {
-        LoginResponseDto data = authService.renewAcessToken((request));
+    public ResponseEntity<LoginResponseDto> renewAccessToken(
+            @CookieValue(value = "refreshToken", required = false) String refreshToken) {
+        LoginResponseDto data = authService.renewAcessToken(refreshToken);
         return ResponseEntity.ok(data);
     }
 

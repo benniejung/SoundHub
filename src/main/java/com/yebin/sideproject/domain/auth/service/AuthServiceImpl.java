@@ -61,16 +61,13 @@ public class AuthServiceImpl implements AuthService {
     // accessToken이 만료 되어서 refreshToken으로 재발급할 때 요청되는 메서드
     @Override
     @Transactional
-    public LoginResponseDto renewAcessToken(RefreshRequestDto request) {
-        // 1. 클라이언트로부터 refreshToken을 받아온다
-        String refreshToken = request.refreshToken();
-
-        // 2. 리프레시토큰이 만료되었는지 체크
+    public LoginResponseDto renewAcessToken(String refreshToken) {
+        // 1. 리프레시토큰이 만료되었는지 체크
         if (!jwtTokenProvider.validateToken(refreshToken)) {
             throw new InvalidRefreshTokenException(AuthErrorCode.REFRESH_TOKEN_INVALID); // 만료되면 로그인화면으로 이동(추후 리팩토링)
         }
 
-        // 3. 리프레시토큰으로 유저 아이디 찾기
+        // 2. 리프레시토큰으로 유저 아이디 찾기
         Long userId;
         try {
             userId = jwtTokenProvider.getUserId(refreshToken);
@@ -81,7 +78,7 @@ public class AuthServiceImpl implements AuthService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new InvalidRefreshTokenException(AuthErrorCode.REFRESH_TOKEN_INVALID)); // 추후 수정
 
-        // 4. Radis 저장소에 저장되어있던 refreshToken을 가져와서 서로 같은지 확인
+        // 3. Redis 저장소에 저장되어있던 refreshToken을 가져와서 서로 같은지 확인
         String storedToken = refreshTokenRedisRepository.findByUserId(userId)
                 .orElseThrow(() -> new InvalidRefreshTokenException(AuthErrorCode.REFRESH_TOKEN_INVALID)); // 추후 수정
 
