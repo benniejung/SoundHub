@@ -25,7 +25,7 @@ public class AuthEntryPoint implements AuthenticationEntryPoint {
                          AuthenticationException authException) throws IOException, ServletException {
         GlobalErrorCode errorCode = GlobalErrorCode.UNAUTHENTICATED_REQUEST; // 401 코드 (신규 추가 필요)
 
-        response.setStatus(errorCode.getStatus().value());
+        response.setStatus(errorCode.getHttpStatus().value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding("UTF-8");
         response.getWriter().write(objectMapper.writeValueAsString(BaseResponse.onFailure(errorCode, null)));

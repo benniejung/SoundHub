@@ -23,7 +23,7 @@ public class LoginFailureHandler implements AuthenticationFailureHandler {
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception) throws IOException {
         AuthErrorCode errorCode = AuthErrorCode.LOGIN_FAILED;
 
-        response.setStatus(errorCode.getStatus().value());
+        response.setStatus(errorCode.getHttpStatus().value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding("UTF-8");
         response.getWriter().write(objectMapper.writeValueAsString(BaseResponse.onFailure(errorCode, null)));

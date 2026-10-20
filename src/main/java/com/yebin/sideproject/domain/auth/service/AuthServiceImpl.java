@@ -2,10 +2,7 @@ package com.yebin.sideproject.domain.auth.service;
 
 import com.yebin.sideproject.domain.auth.dto.*;
 import com.yebin.sideproject.domain.auth.entity.User;
-import com.yebin.sideproject.domain.auth.exception.AuthErrorCode;
-import com.yebin.sideproject.domain.auth.exception.DuplicateEmailException;
-import com.yebin.sideproject.domain.auth.exception.DuplicateNicknameException;
-import com.yebin.sideproject.domain.auth.exception.InvalidRefreshTokenException;
+import com.yebin.sideproject.domain.auth.exception.*;
 import com.yebin.sideproject.domain.auth.repository.RefreshTokenRedisRepository;
 import com.yebin.sideproject.domain.auth.repository.UserRepository;
 import com.yebin.sideproject.global.entity.Password;
@@ -17,8 +14,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 @Slf4j
 public class AuthServiceImpl implements AuthService {
 
@@ -32,7 +32,7 @@ public class AuthServiceImpl implements AuthService {
     public SignupResponseDto signup(SignupRequestDto request) {
         // 1. 회원가입 중복 체크: 이미 등록된 이메일이 있는지 확인
         if (userRepository.existsByEmail(request.email())) {
-            throw new DuplicateEmailException(AuthErrorCode.DUPLICATE_EMAIL_ERROR);
+            throw new AuthException(AuthErrorCode.DUPLICATE_EMAIL_ERROR);
         }
 
         // 2. 닉네임 중복 체크; 이미 등록된 닉네임이 있는지 확인
@@ -54,17 +54,16 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public void confirmDuplicateNickname(ConfirmDuplicateNicknameRequestDto request) {
         if(userRepository.existsByNickname(request.nickname())) {
-            throw new DuplicateNicknameException(AuthErrorCode.DUPLICATE_NICKNAME_ERROR);
+            throw new AuthException(AuthErrorCode.DUPLICATE_NICKNAME_ERROR);
         }
     }
 
     // accessToken이 만료 되어서 refreshToken으로 재발급할 때 요청되는 메서드
     @Override
-    @Transactional
     public LoginResponseDto renewAcessToken(String refreshToken) {
         // 1. 리프레시토큰이 만료되었는지 체크
         if (!jwtTokenProvider.validateToken(refreshToken)) {
-            throw new InvalidRefreshTokenException(AuthErrorCode.REFRESH_TOKEN_INVALID); // 만료되면 로그인화면으로 이동(추후 리팩토링)
+            throw new AuthException(AuthErrorCode.REFRESH_TOKEN_INVALID); // 만료되면 로그인화면으로 이동(추후 리팩토링)
         }
 
         // 2. 리프레시토큰으로 유저 아이디 찾기
@@ -72,18 +71,18 @@ public class AuthServiceImpl implements AuthService {
         try {
             userId = jwtTokenProvider.getUserId(refreshToken);
         } catch (NumberFormatException e) {
-            throw new InvalidRefreshTokenException(AuthErrorCode.REFRESH_TOKEN_INVALID); // 추후 수정
+            throw new AuthException(AuthErrorCode.REFRESH_TOKEN_INVALID); // 추후 수정
         }
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new InvalidRefreshTokenException(AuthErrorCode.REFRESH_TOKEN_INVALID)); // 추후 수정
+                .orElseThrow(() -> new AuthException(AuthErrorCode.REFRESH_TOKEN_INVALID)); // 추후 수정
 
         // 3. Redis 저장소에 저장되어있던 refreshToken을 가져와서 서로 같은지 확인
         String storedToken = refreshTokenRedisRepository.findByUserId(userId)
-                .orElseThrow(() -> new InvalidRefreshTokenException(AuthErrorCode.REFRESH_TOKEN_INVALID)); // 추후 수정
+                .orElseThrow(() -> new AuthException(AuthErrorCode.REFRESH_TOKEN_INVALID)); // 추후 수정
 
         if (!storedToken.equals(refreshToken)) {
-            throw new InvalidRefreshTokenException(AuthErrorCode.REFRESH_TOKEN_INVALID);  // 추후 수정
+            throw new AuthException(AuthErrorCode.REFRESH_TOKEN_INVALID);  // 추후 수정
         }
 
         String newAccessToken = jwtTokenProvider.generateAccessToken(user);

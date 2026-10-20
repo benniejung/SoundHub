@@ -7,6 +7,7 @@ import com.yebin.sideproject.global.response.code.GlobalSuccessCode;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -16,6 +17,7 @@ import java.time.format.DateTimeFormatter;
 @JsonPropertyOrder({"isSuccess", "code", "message", "result", "timeStamp"})
 public class BaseResponse<T> {
     private final Boolean isSuccess;
+    private final int status;
     private final String code; // 커스텀 응답 코드 (ex. A01, B02 등)
     private final String message; // 응답 메시지
     private final T result; // 데이터 응답 결과
@@ -23,11 +25,11 @@ public class BaseResponse<T> {
 
     // 성공 응답을 위한 정적 메서드
     public static <T> BaseResponse<T> onSuccess(BaseResponseCode code, T result) {
-        return new BaseResponse<>(true, code.getCode(), code.getMessage(), result);
+        return new BaseResponse<>(true, code.getHttpStatus().value(), code.getCode(), code.getMessage(), result);
     }
 
     // 실패 응답을 위한 정적 메서드
     public static <T> BaseResponse<T> onFailure(BaseResponseCode code, T result) {
-        return new BaseResponse<>(false, code.getCode(), code.getMessage(), result);
+        return new BaseResponse<>(false, code.getHttpStatus().value(), code.getCode(), code.getMessage(), result);
     }
 }

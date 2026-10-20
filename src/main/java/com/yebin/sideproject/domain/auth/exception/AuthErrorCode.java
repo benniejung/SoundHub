@@ -18,7 +18,8 @@ public enum AuthErrorCode implements BaseResponseCode {
     DUPLICATE_EMAIL_ERROR(CONFLICT, "AUTH_409_1", "이미 가입된 이메일입니다."),
     DUPLICATE_NICKNAME_ERROR(CONFLICT, "AUTH_409_2", "이미 가입된 닉네임니다.");
 
-    private final HttpStatus status;
+    private final HttpStatus httpStatus;
     private final String code;
     private final String message;
+
 }
