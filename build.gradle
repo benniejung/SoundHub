@@ -6,7 +6,7 @@ plugins {
 
 group = 'com.yebin'
 version = '0.0.2-SNAPSHOT'
-description = 'SideProject'
+description = 'SoundHub'
 
 java {
     toolchain {
@@ -60,6 +60,10 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'io.micrometer:micrometer-registry-prometheus'
 
+    // docker compose
+    developmentOnly 'org.springframework.boot:spring-boot-docker-compose'
+
+
     // test
     testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
@@ -77,4 +81,15 @@ dependencyManagement {
 
 tasks.named('test') {
     useJUnitPlatform()
+}
+
+plugins {
+    id "org.sonarqube" version "7.5.0.8588"
+}
+
+sonar {
+    properties {
+        property "sonar.projectKey", "benniejung_SoundHub_secret_key"
+        property "sonar.organization", "benniejung-secret-key"
+    }
 }

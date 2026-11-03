@@ -6,10 +6,10 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
 @SpringBootApplication
 @EnableJpaAuditing
-public class SideProjectApplication {
+public class SoundhubApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(SideProjectApplication.class, args);
+        SpringApplication.run(SoundhubApplication.class, args);
     }
 
 }
