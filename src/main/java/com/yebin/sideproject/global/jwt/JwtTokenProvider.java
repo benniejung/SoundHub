@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
@@ -60,12 +61,14 @@ public class JwtTokenProvider {
         }
     }
 
-    public LocalDateTime getExpiration(String token) {
-        Date expiration = Jwts.parserBuilder().setSigningKey(key).build()
+    public Instant getExpiration(String token) {
+        Date expiration = Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
                 .parseClaimsJws(token)
                 .getBody()
                 .getExpiration();
-        return LocalDateTime.ofInstant(expiration.toInstant(), ZoneId.systemDefault());
+        return expiration.toInstant();   // 시간대 변환 없이 그대로 절대 시각
     }
 
     public String getEmail(String token) {

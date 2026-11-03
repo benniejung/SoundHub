@@ -18,6 +18,7 @@ import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
@@ -42,8 +43,8 @@ public class LoginSuccessHandler implements AuthenticationSuccessHandler {
         String refreshToken = jwtTokenProvider.generateRefreshToken(user);
 
         // 리프레시 토큰은 Redis 저장소에 저장
-        LocalDateTime refreshExpiresAt = jwtTokenProvider.getExpiration(refreshToken);
-        Duration ttl = Duration.between(LocalDateTime.now(), refreshExpiresAt);
+        Instant refreshExpiresAt = jwtTokenProvider.getExpiration(refreshToken);
+        Duration ttl = Duration.between(Instant.now(), refreshExpiresAt);
         refreshTokenRedisRepository.save(user.getId(), refreshToken, ttl);
 
         // 리프레시 토큰은 JS에서 접근 불가능한 HttpOnly 쿠키로 전달
