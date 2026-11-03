@@ -99,7 +99,7 @@ public class TrackService {
 
     // 로그인한 크리에이터 본인이 업로드한 음원 목록 조회
     public List<TrackSummaryResponseDto> getMyTracks(User user) {
-        List<Track> tracks = trackRepository.findByUserIdOrderByCreatedAtDesc(user.getId());
+        List<Track> tracks = trackRepository.findByUserIdOrderByCreatedAtDesc(user.getId()); // 해당 유저가 올린 것만 가져옴
 
         List<Long> trackIds = tracks.stream().map(Track::getId).toList();
         Map<Long, String> thumbnailPathByTrackId = trackFileRepository

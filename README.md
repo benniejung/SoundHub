@@ -99,6 +99,12 @@ SoundCloud와 같이 누구나 자신이 만든 음악을 업로드하면, 검�
 
 <img width="2048" height="964" alt="image" src="https://github.com/user-attachments/assets/58a722fd-06b7-4fd7-b7b4-79a3107811ed" />
 
+## 로컬 실행
+
+1. `src/main/resources/application-secret.properties`에 DB 접속 정보, `jwt.secret`, OpenAI API 키를 채운다 (`.gitignore` 처리됨, 직접 생성 필요)
+2. `docker-compose up -d`로 Redis(리프레시 토큰 저장소) 실행
+3. `./gradlew bootRun`으로 애플리케이션 실행 (Postgres는 별도로 로컬에 준비되어 있어야 함)
+
 ## API 문서
 
 ### 노션 정리
