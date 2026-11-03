@@ -1,0 +1,4 @@
+#!/bin/sh
+set -e
+echo "[pre-push] 단위 테스트 실행"
+./gradlew test -q

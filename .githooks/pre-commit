@@ -1,0 +1,28 @@
+#!/bin/sh
+# 커밋 직전 점검: 하나라도 실패하면 커밋이 취소돼요.
+set -e
+
+echo "[pre-commit] 1/3 비밀값 검사"
+if command -v gitleaks >/dev/null 2>&1; then
+  if gitleaks git --help >/dev/null 2>&1; then
+    gitleaks git --pre-commit --staged --redact    # 최신 버전
+  else
+    gitleaks protect --staged --redact             # 구버전
+  fi
+else
+  echo "  gitleaks가 설치되어 있지 않아 건너뜁니다. (brew install gitleaks)"
+fi
+
+# 이번 커밋에 자바/빌드 파일이 있을 때만 아래 검사를 실행해요.
+CHANGED=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(java|gradle)$' || true)
+
+if [ -n "$CHANGED" ]; then
+  echo "[pre-commit] 2/3 컴파일 확인"
+  ./gradlew compileJava compileTestJava -q
+
+  # Spotless를 쓰는 경우에만 켜세요.
+  # echo "[pre-commit] 3/3 포맷 검사"
+  # ./gradlew spotlessCheck -q
+fi
+
+echo "[pre-commit] 통과"
