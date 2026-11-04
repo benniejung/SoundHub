@@ -32,11 +32,11 @@ public class SecurityConfig {
     private List<String> allowedOrigins;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .sessionManagement((sessionManagement) -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .sessionManagement(sessionManagement -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**", "/error").permitAll()
                         .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
@@ -44,9 +44,7 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/env", "/actuator/heapdump", "/actuator/loggers").permitAll()
                         .anyRequest().authenticated()
                 )
-                // jsonFilter가 UsernamePasswordAuthenticationFilter 자리를 대체
                 .addFilterAt(jsonFilter, UsernamePasswordAuthenticationFilter.class)
-                // UsernamePasswordAuthenticationFilter가 실행되기 전에 jwtAuthenticationFilter 실행
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint(authEntryPoint)   // 401

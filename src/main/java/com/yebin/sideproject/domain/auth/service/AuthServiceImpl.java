@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -30,21 +31,14 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public SignupResponseDto signup(SignupRequestDto request) {
-        // 1. 회원가입 중복 체크: 이미 등록된 이메일이 있는지 확인
         if (userRepository.existsByEmail(request.email())) {
             throw new AuthException(AuthErrorCode.DUPLICATE_EMAIL_ERROR);
         }
 
-        // 2. 닉네임 중복 체크; 이미 등록된 닉네임이 있는지 확인
-        if(userRepository.existsByNickname(request.nickname())) {
-            throw new DuplicateNicknameException(AuthErrorCode.DUPLICATE_NICKNAME_ERROR);
-        }
-
-        // 3. 유저 객체 생성 후 DB에 저장 (비밀번호는 해시로 변환해 저장)
         User user = User.builder()
                 .email(request.email())
                 .password(Password.savePassword(request.password(), passwordEncoder))
-                .nickname(request.nickname())
+                .nickname(generateUniqueNickname())
                 .build();
 
         User saved = userRepository.save(user);
@@ -105,4 +99,18 @@ public class AuthServiceImpl implements AuthService {
             log.info("로그아웃 요청에 유효하지 않은 refreshToken이 포함되어 있어 Redis 삭제를 건너뜁니다.");
         }
     }
+
+    // 랜덤 닉네임 생성 메서드
+    private static final int NICKNAME_MAX_RETRY = 5;
+
+    private String generateUniqueNickname() {
+        for (int i = 0; i < NICKNAME_MAX_RETRY; i++) {
+            String nickname = "user_" + UUID.randomUUID().toString().substring(0, 8);
+            if (!userRepository.existsByNickname(nickname)) {
+                return nickname;
+            }
+        }
+        throw new AuthException(AuthErrorCode.DUPLICATE_NICKNAME_ERROR);
+    }
+
 }

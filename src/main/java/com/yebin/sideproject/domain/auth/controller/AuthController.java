@@ -34,7 +34,6 @@ public class AuthController {
     @ApiResponse(responseCode = "201", description = "회원가입 성공",
             content = @Content(schema = @Schema(implementation = LoginResponseDto.class)))
     @ApiResponse(responseCode = "409", description = "이미 가입한 이메일입니다.")
-    @ApiResponse(responseCode = "409", description = "해당 닉네임을 사용할 수 없습니다.")
     public ResponseEntity<BaseResponse<SignupResponseDto>> signup(@Valid @RequestBody SignupRequestDto request) {
         SignupResponseDto data = authService.signup(request);
         return ResponseEntity
