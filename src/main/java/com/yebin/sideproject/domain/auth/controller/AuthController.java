@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -41,14 +42,16 @@ public class AuthController {
                 .body(BaseResponse.onSuccess(GlobalSuccessCode.SUCCESS_CREATED, data));
     }
 
-    @GetMapping("/confirm-nickname")
-    @Operation(summary = "닉네임 중복 확인")
-    @ApiResponse(responseCode = "409", description = "해당 닉네임을 사용할 수 없습니다.")
-    public ResponseEntity<BaseResponse<Void>> confirmDuplicateNickname(@Valid @RequestBody ConfirmDuplicateNicknameRequestDto request) {
-        authService.confirmDuplicateNickname(request);
-        return ResponseEntity
-                .status(GlobalSuccessCode.SUCCESS_OK.getHttpStatus())
-                .body(BaseResponse.onSuccess(GlobalSuccessCode.SUCCESS_OK, null));
+    @PostMapping("/phone/send")
+    @Operation(summary = "인증번호 발송", description = "입력받은 전화번호로 6자리 인증번호를 SMS로 발송합니다.")
+    @ApiResponse(responseCode = "200", description = "발송 요청 성공")
+    @ApiResponse(responseCode = "400", description = "올바른 휴대폰 번호 형식이 아닙니다.")
+    @ApiResponse(responseCode = "429", description = "AUTH_429_1: 재발송 간격 미충족 / AUTH_429_2: 요청 횟수 초과")
+    @ApiResponse(responseCode = "502", description = "SMS 발송 실패")
+    public BaseResponse<Void> sendSMS(@Valid @RequestBody SendSmsRequestDto request, HttpServletRequest servletRequest) {
+        // X-Forwarded-For는 클라이언트가 조작할 수 있어 IP 제한에 쓰지 않는다
+        authService.sendSMS(request, servletRequest.getRemoteAddr());
+        return BaseResponse.onSuccess(GlobalSuccessCode.SUCCESS_OK, null);
     }
 
     @PostMapping("/login")

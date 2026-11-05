@@ -58,4 +58,9 @@ jobs:
           MINIO_SECRETKEY: dummy
           MINIO_SOUNDHUBAUDIO: soundhub-audio
           MINIO_SOUNDHUBTHUMBNAIL: soundhub-thumbnail
+          SMSAPIKEY: dummy
+          SMSSECRETKEY: dummy
+          SMSFROMNUMBER: "01000000000"
+          # CI의 테스트 DB는 비어 있으므로 validate 대신 테이블을 생성
+          SPRING_JPA_HIBERNATE_DDL_AUTO: update
         run: ./gradlew build sonar --info

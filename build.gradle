@@ -64,6 +64,9 @@ dependencies {
     // docker compose
     developmentOnly 'org.springframework.boot:spring-boot-docker-compose'
 
+    // SMS
+    implementation 'com.solapi:sdk:1.2.0'
+
 
     // test
     testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'

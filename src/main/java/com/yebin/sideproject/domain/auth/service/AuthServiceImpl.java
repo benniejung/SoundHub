@@ -4,16 +4,21 @@ import com.yebin.sideproject.domain.auth.dto.*;
 import com.yebin.sideproject.domain.auth.entity.User;
 import com.yebin.sideproject.domain.auth.exception.*;
 import com.yebin.sideproject.domain.auth.repository.RefreshTokenRedisRepository;
+import com.yebin.sideproject.domain.auth.repository.SmsAuthRedisRepository;
 import com.yebin.sideproject.domain.auth.repository.UserRepository;
 import com.yebin.sideproject.global.entity.Password;
+import com.yebin.sideproject.global.exception.BaseException;
 import com.yebin.sideproject.global.jwt.JwtTokenProvider;
+import com.yebin.sideproject.global.sms.SmsSender;
 import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.SecureRandom;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -27,7 +32,12 @@ public class AuthServiceImpl implements AuthService {
     private final RefreshTokenRedisRepository refreshTokenRedisRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+    private final SmsAuthRedisRepository smsAuthRedisRepository;
+    private final SmsSender smsSender;
 
+    /**
+     * 회원가입
+     */
     @Override
     @Transactional
     public SignupResponseDto signup(SignupRequestDto request) {
@@ -45,6 +55,9 @@ public class AuthServiceImpl implements AuthService {
         return new SignupResponseDto(saved.getId(), saved.getEmail(), saved.getNickname(), saved.getRole());
     }
 
+    /**
+     * 닉네임 중복 체크
+     */
     @Override
     public void confirmDuplicateNickname(ConfirmDuplicateNicknameRequestDto request) {
         if(userRepository.existsByNickname(request.nickname())) {
@@ -52,7 +65,39 @@ public class AuthServiceImpl implements AuthService {
         }
     }
 
-    // accessToken이 만료 되어서 refreshToken으로 재발급할 때 요청되는 메서드
+    /**
+     * 인증번호 SMS 발송
+     */
+    @Override
+    @Transactional(propagation = Propagation.NOT_SUPPORTED) // 외부 API를 호출하는 동안 DB 커넥션을 점유하지 않도록 트랜잭션 없이 실행
+    public void sendSMS(SendSmsRequestDto request, String clientIp) {
+        String phoneNumber = request.phoneNumber();
+
+        // IP 제한에 걸린 요청이 다른 사람 번호의 재발송 간격을 잡지 못하도록 IP를 먼저 확인한다
+        if (!smsAuthRedisRepository.isWithinIpLimit(clientIp)) {
+            throw new BaseException(AuthErrorCode.SMS_SEND_LIMIT_EXCEEDED);
+        }
+        if (!smsAuthRedisRepository.tryAcquireCooldown(phoneNumber)) {
+            throw new BaseException(AuthErrorCode.SMS_RESEND_TOO_SOON);
+        }
+        if (!smsAuthRedisRepository.isWithinDailyLimit(phoneNumber)) {
+            throw new BaseException(AuthErrorCode.SMS_SEND_LIMIT_EXCEEDED);
+        }
+
+        String code = generateSmsCode();
+        smsAuthRedisRepository.saveCode(phoneNumber, code);
+
+        try {
+            smsSender.send(phoneNumber, "[SoundHub] 인증번호 [%s] *타인에게 절대 노출하지 마세요.(계정 도용 위험)".formatted(code));
+        } catch (BaseException e) {
+            smsAuthRedisRepository.deleteCode(phoneNumber);
+            throw e;
+        }
+    }
+
+    /**
+     *  refreshToken 재발급
+     */
     @Override
     public LoginResponseDto renewAcessToken(String refreshToken) {
         // 1. 리프레시토큰이 만료되었는지 체크
@@ -84,7 +129,9 @@ public class AuthServiceImpl implements AuthService {
         return new LoginResponseDto(newAccessToken, user.getEmail(), user.getNickname(), user.getRole());
     }
 
-    // 로그아웃: Redis에 저장된 refreshToken을 제거한다
+    /**
+     *  로그아웃
+     */
     @Override
     public void logout(String refreshToken) {
         if (refreshToken == null || refreshToken.isBlank()) {
@@ -111,6 +158,13 @@ public class AuthServiceImpl implements AuthService {
             }
         }
         throw new AuthException(AuthErrorCode.DUPLICATE_NICKNAME_ERROR);
+    }
+
+    // 인증코드 생성 메서드
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
+    private String generateSmsCode() {
+        return String.format("%06d", SECURE_RANDOM.nextInt(1_000_000));
     }
 
 }
