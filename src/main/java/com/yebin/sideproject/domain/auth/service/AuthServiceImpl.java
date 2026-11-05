@@ -96,6 +96,39 @@ public class AuthServiceImpl implements AuthService {
     }
 
     /**
+     * 인증번호 확인
+     */
+    @Override
+    public VerifySMSResponseDto verifySMS(VerifySMSRequestDto request) {
+        String phoneNumber = request.phoneNumber();
+
+        // 1. Redis에 저장된 인증번호 조회 -> 없으면 만료되었거나 폐기된 인증번호
+        String savedCode = smsAuthRedisRepository.findCode(phoneNumber)
+                .orElseThrow(() -> new BaseException(AuthErrorCode.SMS_CODE_EXPIRED));
+
+        // 2. 인증번호 비교 -> 틀리면 틀린 횟수 증가 (5회가 되면 인증번호 폐기)
+        if (!savedCode.equals(request.smsNumber())) {
+            if (smsAuthRedisRepository.recordFailedAttempt(phoneNumber)) {
+                throw new BaseException(AuthErrorCode.SMS_ATTEMPTS_EXCEEDED);
+            }
+            throw new BaseException(AuthErrorCode.SMS_CODE_MISMATCH);
+        }
+
+        // 3. 인증번호를 다시 쓸 수 없도록 삭제
+        smsAuthRedisRepository.deleteCode(phoneNumber);
+
+        // 4. 해당 번호로 가입된 사용자가 있는지 확인
+        if (userRepository.existsByPhone(phoneNumber)) {
+            throw new BaseException(AuthErrorCode.PHONE_ALREADY_REGISTERED);
+        }
+
+        // 5. 인증 완료 -> 회원가입 때 인증된 번호를 확인할 수 있도록 1회용 토큰 발급
+        String signupToken = UUID.randomUUID().toString();
+        smsAuthRedisRepository.saveSignupToken(signupToken, phoneNumber);
+        return new VerifySMSResponseDto(signupToken);
+    }
+
+    /**
      *  refreshToken 재발급
      */
     @Override

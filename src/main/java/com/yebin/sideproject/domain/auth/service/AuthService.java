@@ -5,6 +5,8 @@ import com.yebin.sideproject.domain.auth.dto.LoginResponseDto;
 import com.yebin.sideproject.domain.auth.dto.SendSmsRequestDto;
 import com.yebin.sideproject.domain.auth.dto.SignupRequestDto;
 import com.yebin.sideproject.domain.auth.dto.SignupResponseDto;
+import com.yebin.sideproject.domain.auth.dto.VerifySMSRequestDto;
+import com.yebin.sideproject.domain.auth.dto.VerifySMSResponseDto;
 
 public interface AuthService {
 
@@ -13,6 +15,8 @@ public interface AuthService {
     void confirmDuplicateNickname(ConfirmDuplicateNicknameRequestDto request);
 
     void sendSMS(SendSmsRequestDto request, String clientIp);
+
+    VerifySMSResponseDto verifySMS(VerifySMSRequestDto request);
 
     // accessToken이 만료 되어서 refreshToken으로 재발급할 때 요청되는 메서드
     LoginResponseDto renewAcessToken(String refreshToken);

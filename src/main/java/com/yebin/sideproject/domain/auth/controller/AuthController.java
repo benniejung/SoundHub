@@ -49,10 +49,22 @@ public class AuthController {
     @ApiResponse(responseCode = "429", description = "AUTH_429_1: 재발송 간격 미충족 / AUTH_429_2: 요청 횟수 초과")
     @ApiResponse(responseCode = "502", description = "SMS 발송 실패")
     public BaseResponse<Void> sendSMS(@Valid @RequestBody SendSmsRequestDto request, HttpServletRequest servletRequest) {
-        // X-Forwarded-For는 클라이언트가 조작할 수 있어 IP 제한에 쓰지 않는다
         authService.sendSMS(request, servletRequest.getRemoteAddr());
         return BaseResponse.onSuccess(GlobalSuccessCode.SUCCESS_OK, null);
     }
+
+    @PostMapping("/phone/verify")
+    @Operation(summary = "인증번호 및 가입여부 확인", description = "인증번호를 확인하고, 가입되지 않은 번호이면 회원가입에 사용할 토큰을 발급합니다.")
+    @ApiResponse(responseCode = "200", description = "휴대폰 인증 완료")
+    @ApiResponse(responseCode = "400", description = "AUTH_400_1: 인증번호 만료 / AUTH_400_2: 인증번호 불일치")
+    @ApiResponse(responseCode = "409", description = "이미 가입된 휴대폰 번호입니다.")
+    @ApiResponse(responseCode = "429", description = "인증번호를 5회 틀렸습니다.")
+    public BaseResponse<VerifySMSResponseDto> verifySMS(@Valid @RequestBody VerifySMSRequestDto request) {
+        VerifySMSResponseDto data = authService.verifySMS(request);
+        return BaseResponse.onSuccess(GlobalSuccessCode.SUCCESS_OK, data);
+    }
+
+
 
     @PostMapping("/login")
     @Operation(summary = "로그인", description = "이메일/비밀번호로 로그인하여 JWT토큰을 발급받습니다.")

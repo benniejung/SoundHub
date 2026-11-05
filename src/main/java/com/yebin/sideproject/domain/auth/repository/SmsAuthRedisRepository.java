@@ -19,11 +19,13 @@ public class SmsAuthRedisRepository {
     private static final String COOLDOWN_PREFIX = "sms:cooldown:";
     private static final String DAILY_PREFIX = "sms:daily:";
     private static final String IP_PREFIX = "sms:ip:hour:";
+    private static final String SIGNUP_PREFIX = "sms:signup:";
 
     private static final Duration CODE_TTL = Duration.ofMinutes(5);
-    private static final Duration COOLDOWN_TTL = Duration.ofSeconds(10);
+    private static final Duration COOLDOWN_TTL = Duration.ofSeconds(15);
     private static final Duration ONE_DAY = Duration.ofDays(1);
     private static final Duration ONE_HOUR = Duration.ofHours(1);
+    private static final Duration SIGNUP_TOKEN_TTL = Duration.ofMinutes(10);
     private static final long MAX_ATTEMPTS = 5;
     private static final long DAILY_LIMIT = 10;
     private static final long IP_HOURLY_LIMIT = 20;
@@ -75,6 +77,10 @@ public class SmsAuthRedisRepository {
 
     public void deleteCode(String phoneNumber) {
         redisTemplate.delete(List.of(CODE_PREFIX + phoneNumber, ATTEMPT_PREFIX + phoneNumber));
+    }
+
+    public void saveSignupToken(String signupToken, String phoneNumber) {
+        redisTemplate.opsForValue().set(SIGNUP_PREFIX + signupToken, phoneNumber, SIGNUP_TOKEN_TTL);
     }
 
     private long increment(String key, Duration ttl) {
