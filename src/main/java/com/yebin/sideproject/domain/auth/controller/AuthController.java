@@ -31,10 +31,11 @@ public class AuthController {
 
 
     @PostMapping("/signup")
-    @Operation(summary = "회원가입", description = "이메일, 비밀번호, 닉네임을 입력받아 회원가입합니다.")
+    @Operation(summary = "회원가입", description = "휴대폰 인증 후 받은 signupToken과 이메일, 비밀번호를 입력받아 회원가입합니다.")
     @ApiResponse(responseCode = "201", description = "회원가입 성공",
-            content = @Content(schema = @Schema(implementation = LoginResponseDto.class)))
-    @ApiResponse(responseCode = "409", description = "이미 가입한 이메일입니다.")
+            content = @Content(schema = @Schema(implementation = SignupResponseDto.class)))
+    @ApiResponse(responseCode = "400", description = "AUTH_400_3: 휴대폰 인증 만료 또는 유효하지 않은 토큰")
+    @ApiResponse(responseCode = "409", description = "AUTH_409_1: 이미 가입한 이메일 / AUTH_409_3: 이미 가입한 휴대폰 번호")
     public ResponseEntity<BaseResponse<SignupResponseDto>> signup(@Valid @RequestBody SignupRequestDto request) {
         SignupResponseDto data = authService.signup(request);
         return ResponseEntity

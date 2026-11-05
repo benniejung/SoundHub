@@ -41,17 +41,34 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public SignupResponseDto signup(SignupRequestDto request) {
+        // 1. Redis에서 signupToken으로 인증된 전화번호 조회
+        String phoneNumber = smsAuthRedisRepository.findPhoneBySignupToken(request.signupToken())
+                .orElseThrow(() -> new BaseException(AuthErrorCode.SIGNUP_TOKEN_INVALID));
+
+        // 2. 이메일 중복 검사 -> 다른 이메일로 다시 가입할 수 있도록 토큰은 유지
         if (userRepository.existsByEmail(request.email())) {
             throw new AuthException(AuthErrorCode.DUPLICATE_EMAIL_ERROR);
         }
 
+        // 3. 전화번호 중복 검사 -> 토큰이 유효한 동안 같은 번호로 먼저 가입했을 수 있음
+        if (userRepository.existsByPhone(phoneNumber)) {
+            throw new BaseException(AuthErrorCode.PHONE_ALREADY_REGISTERED);
+        }
+
+        // 4. 유저 저장
         User user = User.builder()
                 .email(request.email())
                 .password(Password.savePassword(request.password(), passwordEncoder))
                 .nickname(generateUniqueNickname())
+                .phone(phoneNumber)
+                .phoneVerified(true)
                 .build();
 
-        User saved = userRepository.save(user);
+        User saved = userRepository.saveAndFlush(user);
+
+        // 5. 같은 토큰으로 다시 가입할 수 없도록 삭제
+        smsAuthRedisRepository.deleteSignupToken(request.signupToken());
+
         return new SignupResponseDto(saved.getId(), saved.getEmail(), saved.getNickname(), saved.getRole());
     }
 

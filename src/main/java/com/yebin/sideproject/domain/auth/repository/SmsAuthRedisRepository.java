@@ -83,6 +83,14 @@ public class SmsAuthRedisRepository {
         redisTemplate.opsForValue().set(SIGNUP_PREFIX + signupToken, phoneNumber, SIGNUP_TOKEN_TTL);
     }
 
+    public Optional<String> findPhoneBySignupToken(String signupToken) {
+        return Optional.ofNullable(redisTemplate.opsForValue().get(SIGNUP_PREFIX + signupToken));
+    }
+
+    public void deleteSignupToken(String signupToken) {
+        redisTemplate.delete(SIGNUP_PREFIX + signupToken);
+    }
+
     private long increment(String key, Duration ttl) {
         return redisTemplate.execute(INCREMENT_SCRIPT, List.of(key), String.valueOf(ttl.toMillis()));
     }

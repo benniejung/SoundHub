@@ -15,6 +15,7 @@ public enum AuthErrorCode implements BaseResponseCode {
 
     SMS_CODE_EXPIRED(BAD_REQUEST, "AUTH_400_1", "인증번호가 만료되었습니다. 인증번호를 다시 요청해 주세요."),
     SMS_CODE_MISMATCH(BAD_REQUEST, "AUTH_400_2", "인증번호가 일치하지 않습니다."),
+    SIGNUP_TOKEN_INVALID(BAD_REQUEST, "AUTH_400_3", "휴대폰 인증이 만료되었습니다. 휴대폰 인증을 다시 진행해 주세요."),
     REFRESH_TOKEN_INVALID(UNAUTHORIZED, "AUTH_401_1", "리프레시 토큰이 유효하지 않습니다. 다시 로그인해주세요."),
     LOGIN_FAILED(UNAUTHORIZED, "AUTH_401_2", "이메일 또는 비밀번호가 올바르지 않습니다."),
     DUPLICATE_EMAIL_ERROR(CONFLICT, "AUTH_409_1", "이미 가입된 이메일입니다."),
