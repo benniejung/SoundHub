@@ -40,3 +40,9 @@ out/
 
 ### VS Code ###
 .vscode/
+
+# IDE 실행 설정 (환경변수에 비밀값 포함)
+.run/
+
+# Claude Code 개인 설정
+.claude/settings.local.json
