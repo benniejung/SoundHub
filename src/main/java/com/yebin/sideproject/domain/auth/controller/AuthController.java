@@ -6,6 +6,7 @@ import com.yebin.sideproject.global.jwt.RefreshTokenCookieFactory;
 import com.yebin.sideproject.global.response.BaseResponse;
 import com.yebin.sideproject.global.response.code.GlobalSuccessCode;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.headers.Header;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -34,7 +35,7 @@ public class AuthController {
     @Operation(summary = "회원가입", description = "휴대폰 인증 후 받은 signupToken과 이메일, 비밀번호를 입력받아 회원가입합니다.")
     @ApiResponse(responseCode = "201", description = "회원가입 성공",
             content = @Content(schema = @Schema(implementation = SignupResponseDto.class)))
-    @ApiResponse(responseCode = "400", description = "AUTH_400_3: 휴대폰 인증 만료 또는 유효하지 않은 토큰")
+    @ApiResponse(responseCode = "400", description = "AUTH_400_3: 휴대폰 인증 만료 또는 유효하지 않은 토큰 / AUTH_400_4: 비밀번호에 아이디 포함 / AUTH_400_5: 흔한 비밀번호")
     @ApiResponse(responseCode = "409", description = "AUTH_409_1: 이미 가입한 이메일 / AUTH_409_3: 이미 가입한 휴대폰 번호")
     public ResponseEntity<BaseResponse<SignupResponseDto>> signup(@Valid @RequestBody SignupRequestDto request) {
         SignupResponseDto data = authService.signup(request);
@@ -70,10 +71,18 @@ public class AuthController {
     @PostMapping("/login")
     @Operation(summary = "로그인", description = "이메일/비밀번호로 로그인하여 JWT토큰을 발급받습니다.")
     @ApiResponse(responseCode = "200", description = "로그인 성공",
-            content = @Content(schema = @Schema(implementation = LoginResponseDto.class)))
-    @ApiResponse(responseCode = "401", description = "이메일 또는 비밀번호가 올바르지 않음")
-    public ResponseEntity<LoginResponseDto> login(@Valid @RequestBody LoginRequestDto request) {
-        throw new IllegalStateException("이 메서드는 실행되지 않습니다. JsonUsernamePasswordAuthenticationFilter가 처리합니다.");
+            content = @Content(schema = @Schema(implementation = LoginResponseDto.class)),
+            headers = @Header(name = HttpHeaders.SET_COOKIE, description = "refreshToken (HttpOnly)"))
+    @ApiResponse(responseCode = "400", description = "이메일 형식 오류 또는 빈 값")
+    @ApiResponse(responseCode = "401", description = "AUTH_401_2: 이메일 또는 비밀번호가 올바르지 않음")
+    public ResponseEntity<BaseResponse<LoginResponseDto>> login(@Valid @RequestBody LoginRequestDto request) {
+        LoginResult result = authService.login(request);
+
+        // refreshToken은 응답 바디가 아니라 HttpOnly 쿠키로만 전달
+        ResponseCookie refreshTokenCookie = refreshTokenCookieFactory.issue(result.refreshToken(), result.refreshTokenTtl());
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString())
+                .body(BaseResponse.onSuccess(GlobalSuccessCode.SUCCESS_OK, result.response()));
     }
 
     @PostMapping("/refresh")

@@ -8,18 +8,24 @@ import com.yebin.sideproject.domain.auth.repository.SmsAuthRedisRepository;
 import com.yebin.sideproject.domain.auth.repository.UserRepository;
 import com.yebin.sideproject.global.entity.Password;
 import com.yebin.sideproject.global.exception.BaseException;
+import com.yebin.sideproject.global.jwt.CustomUserDetails;
 import com.yebin.sideproject.global.jwt.JwtTokenProvider;
 import com.yebin.sideproject.global.sms.SmsSender;
 import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
-import java.util.Optional;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.UUID;
 
 @Service
@@ -34,6 +40,7 @@ public class AuthServiceImpl implements AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final SmsAuthRedisRepository smsAuthRedisRepository;
     private final SmsSender smsSender;
+    private final AuthenticationManager authenticationManager;
 
     /**
      * 회원가입
@@ -58,7 +65,7 @@ public class AuthServiceImpl implements AuthService {
         // 4. 유저 저장
         User user = User.builder()
                 .email(request.email())
-                .password(Password.savePassword(request.password(), passwordEncoder))
+                .password(Password.savePassword(request.password(), request.email(), passwordEncoder))
                 .nickname(generateUniqueNickname())
                 .phone(phoneNumber)
                 .phoneVerified(true)
@@ -143,6 +150,38 @@ public class AuthServiceImpl implements AuthService {
         String signupToken = UUID.randomUUID().toString();
         smsAuthRedisRepository.saveSignupToken(signupToken, phoneNumber);
         return new VerifySMSResponseDto(signupToken);
+    }
+
+    /**
+     * 로그인
+     */
+    @Override
+    public LoginResult login(LoginRequestDto request) {
+        // 1. 이메일/비밀번호 인증 (없는 이메일도 BadCredentialsException으로 감춰짐)
+        Authentication authentication;
+        try {
+            authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(request.email(), request.password()));
+        } catch (AuthenticationException e) {
+            throw new AuthException(AuthErrorCode.LOGIN_FAILED);
+        }
+
+        // getPrincipal()은 @Nullable -> null/다른 타입이면 Provider 설정 오류이므로 명확한 예외로 실패
+        if (!(authentication.getPrincipal() instanceof CustomUserDetails userDetails)) {
+            throw new IllegalStateException("인증 결과의 principal이 CustomUserDetails가 아닙니다.");
+        }
+        User user = userDetails.getUser();
+
+        // 2. 토큰 발급
+        String accessToken = jwtTokenProvider.generateAccessToken(user);
+        String refreshToken = jwtTokenProvider.generateRefreshToken(user);
+
+        // 3. refreshToken은 만료 시각까지만 Redis에 보관
+        Duration ttl = Duration.between(Instant.now(), jwtTokenProvider.getExpiration(refreshToken));
+        refreshTokenRedisRepository.save(user.getId(), refreshToken, ttl);
+
+        LoginResponseDto response = new LoginResponseDto(accessToken, user.getEmail(), user.getNickname(), user.getRole());
+        return new LoginResult(response, refreshToken, ttl);
     }
 
     /**

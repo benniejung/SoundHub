@@ -35,7 +35,7 @@ class AuthServiceImplSignupTest {
     private static final String EMAIL = "soundhub@gmail.com";
     private static final String TOKEN = "signup-token";
     private static final String PHONE = "01012345678";
-    private static final SignupRequestDto REQUEST = new SignupRequestDto(EMAIL, "Password1!", TOKEN);
+    private static final SignupRequestDto REQUEST = new SignupRequestDto(EMAIL, "Xk9#vLm2qR", TOKEN);
 
     @Mock
     private UserRepository userRepository;
@@ -52,7 +52,7 @@ class AuthServiceImplSignupTest {
     @Test
     void 회원가입하면_인증된_번호를_저장한_뒤_토큰을_삭제한다() {
         when(smsAuthRedisRepository.findPhoneBySignupToken(TOKEN)).thenReturn(Optional.of(PHONE));
-        when(passwordEncoder.encode("Password1!")).thenReturn("encoded");
+        when(passwordEncoder.encode("Xk9#vLm2qR")).thenReturn("encoded");
         when(userRepository.saveAndFlush(any(User.class))).then(returnsFirstArg());
 
         SignupResponseDto response = authService.signup(REQUEST);

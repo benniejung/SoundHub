@@ -1,7 +1,6 @@
 package com.yebin.sideproject.global.config;
 
 import com.yebin.sideproject.global.jwt.AuthEntryPoint;
-import com.yebin.sideproject.global.jwt.JsonUsernamePasswordAuthenticationFilter;
 import com.yebin.sideproject.global.jwt.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,7 +23,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JsonUsernamePasswordAuthenticationFilter jsonFilter;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final AuthEntryPoint authEntryPoint;
 
@@ -44,7 +42,6 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/env", "/actuator/heapdump", "/actuator/loggers").permitAll()
                         .anyRequest().authenticated()
                 )
-                .addFilterAt(jsonFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint(authEntryPoint)   // 401
